@@ -1,13 +1,17 @@
+require("dotenv").config();
 require("./config/database").connect();
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("./model/user");
+const cookieParser = require("cookie-parser");
+const auth = require("./middleware/auth");
 
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 app.get("/", (req, res) => {
   res.send("Welcome to Auth System");
@@ -30,7 +34,7 @@ app.post("/register", async (req, res) => {
     }
 
     //encrypt password
-    const encryptPassword = bcrypt.hash(password, 10);
+    const encryptPassword = await bcrypt.hash(password, 10);
 
     //create a new entry in database
     const user = await User.create({
@@ -55,7 +59,8 @@ app.post("/register", async (req, res) => {
 
     res.status(401).json(user);
   } catch (error) {
-    console.log(error), console.log("Error in Reponse Route");
+    console.log(error);
+    console.log("Error in Reponse Route");
   }
 });
 
@@ -96,3 +101,9 @@ app.post("/login", async (req, res) => {
     console.log(error);
   }
 });
+
+app.get("/Dashboard", auth, (req, res) => {
+  res.send("Welcome to Dashboard");
+});
+
+module.exports = app;
